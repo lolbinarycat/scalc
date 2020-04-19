@@ -144,9 +144,13 @@ func processInput(uinput string) {
 			val1 := valStack.Pop() //index
 			val2 := valStack.Pop() //value
 			
-
 			storedVals[val1] = val2
 			fmt.Println("value",val2,"stored under index",val1)
+		case "=":
+			val1 := valStack.Peek()
+			valStack.Push(storedVals[val1])
+
+			fmt.Println("value",valStack.Peek(),"retrived from index",val1)
 		case "l":
 			showStack(valStack)
 		case "h":
