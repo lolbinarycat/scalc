@@ -42,7 +42,7 @@ var (
 )
 
 func main() {
-
+	
 	boolFlags := setFlags()
 
 	if len(os.Args) > 1 {
@@ -87,12 +87,13 @@ func setFlags() (map[string]*bool) {
 
 
 func processInput(uinput string) {
+	defer recover()
 
 	numInput, inpIsNum := strconv.ParseFloat(uinput, 64)
 
 
 	if bracketDepth > 0 {
-		val1 := valStack.Pop()
+		val1 := valStack.Pop() //brackets are used to store functions
 		valStack.Push(strings.Join([]string{val1.(string),uinput}," "))
 		if uinput == "]" {
 			bracketDepth--
@@ -162,14 +163,23 @@ func processInput(uinput string) {
 			val1 := valStack.Peek()
 			valStack.Push(storedVals[val1])
 
-			//fmt.Println("value",valStack.Peek(),"retrived from index",val1)
-		case "~":
+			fmt.Println("value",valStack.Peek(),"retrived from index",val1)
+		case "~": //removes items from stack
 			val1 := valStack.Pop()
 
 			fmt.Println("value",val1,"removed from stack")
-		case "[":
+		case "[": //lets you store functions
 			bracketDepth = 1
 			valStack.Push(uinput)
+		case "#": //lets you run stored functions
+			instructionsRaw := valStack.Pop().(string)
+			instructionsSlice := strings.Split(instructionsRaw," ")
+			instructionsStripped := instructionsSlice[1:len(instructionsSlice)-1]
+			
+			
+			for _, instruction := range instructionsStripped {
+				processInput(instruction)
+			}
 		case "l":
 			showStack(valStack)
 		case "h":
@@ -207,6 +217,13 @@ func showStack(stk *stack.Stack) {
 		fmt.Println(stackCopy.Pop())
 	}
 }
+
+func meditate() {  //stops it from panicing
+    if r := recover(); r!= nil {
+        fmt.Println("recovered from ", r)
+    }
+}
+
 
 func getNumber(reader *bufio.Reader) (float64, error) {
 	uinput, err := reader.ReadString('\n')
