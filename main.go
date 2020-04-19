@@ -23,7 +23,7 @@ this is a simple stack-based calculator program
 the following commands are currently supported:
 
     q    quits the program
-    =    view stack
+    l    view stack
     +    add last 2 numbers in the stack
     -    subtract the last number from the second-to-last number
     *    multiply the last 2 numbers in the stack
@@ -73,7 +73,7 @@ func main() {
 
 func setFlags() (map[string]*bool) {
 	boolFlags := make(map[string]*bool)
-	boolFlags["no-arg-auto-exit"] = flag.Bool("no-arg-auto-exit",false,"makes the program not exit automaticaly when run with command-line arguments")
+	boolFlags["no-arg-auto-exit"] = flag.Bool("no-arg-auto-exit",true,"makes the program not exit automaticaly when run with command-line arguments")
 
 	flag.Parse()
 	
@@ -84,9 +84,14 @@ func processInput(uinput string) {
 
 	numInput, inpIsNum := strconv.ParseFloat(uinput, 64)
 
+
+	
 	if inpIsNum == nil {
 		valStack.Push(numInput)
 		fmt.Println(numInput, "pushed")
+	} else if uinput[:1] == "\"" /*&& uinput[len(uinput):] == "\""*/  {
+		valStack.Push(uinput)
+		fmt.Println(uinput,"pushed")
 	} else {
 
 		switch uinput {
@@ -124,12 +129,20 @@ func processInput(uinput string) {
 
 			valStack.Push(val2 / val1)
 			fmt.Println("quotient is", valStack.Peek())
-		case "=":
+		case  "|": 
+			val1 := valStack.Pop()
+			val2 := valStack.Pop()
+
+			valStack.Push(val2)
+			valStack.Push(val1)
+
+			fmt.Println("values",val2,"and",val1,"swapped")
+		case "l":
 			showStack(valStack)
 		case "h":
 			fmt.Print(helpText)
 		default:
-			fmt.Println("command not recognized")
+			fmt.Println("command",uinput,"not recognized")
 		}
 
 	}
@@ -148,7 +161,7 @@ func pop2Vals(stk *stack.Stack) (val1 float64, val2 float64, err error) {
 	val1, is1Float := stk.Pop().(float64)
 	val2, is2Float := stk.Pop().(float64)
 	if !is1Float || !is2Float {
-		err = errors.New("pop values failed, not enough values in stack")
+		err = errors.New("pop values failed, not enough values or values are not numbers")
 		return 0, 0, err
 	}
 
