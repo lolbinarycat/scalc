@@ -35,9 +35,10 @@ any command line arguments will be parsed as if they were entered interactively
 `
 
 var (
-	progRunning = true
-	valStack    = stack.New()
-	storedVals  = make(map[interface{}]interface{})
+	progRunning  = true
+	valStack     = stack.New()
+	storedVals   = make(map[interface{}]interface{})
+	bracketDepth = 0
 )
 
 func main() {
@@ -83,18 +84,28 @@ func setFlags() (map[string]*bool) {
 	return boolFlags
 }
 
+
+
 func processInput(uinput string) {
 
 	numInput, inpIsNum := strconv.ParseFloat(uinput, 64)
 
 
-	
-	if inpIsNum == nil {
+	if bracketDepth > 0 {
+		val1 := valStack.Pop()
+		valStack.Push(strings.Join([]string{val1.(string),uinput}," "))
+		if uinput == "]" {
+			bracketDepth--
+		} else if uinput == "[" {
+			bracketDepth++
+		}
+	} else if inpIsNum == nil {
 		valStack.Push(numInput)
 		fmt.Println(numInput, "pushed")
 	} else if uinput[:1] == "\"" /*&& uinput[len(uinput):] == "\""*/  {
 		valStack.Push(uinput)
 		fmt.Println(uinput,"pushed")
+	
 	} else {
 
 		switch uinput {
@@ -156,6 +167,9 @@ func processInput(uinput string) {
 			val1 := valStack.Pop()
 
 			fmt.Println("value",val1,"removed from stack")
+		case "[":
+			bracketDepth = 1
+			valStack.Push(uinput)
 		case "l":
 			showStack(valStack)
 		case "h":
