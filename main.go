@@ -12,10 +12,7 @@ import (
 	"github.com/golang-collections/collections/stack"
 )
 
-var (
-	progRunning = true
-	valStack    = stack.New()
-)
+
 
 var helpText string = `
 this is a simple stack-based calculator program
@@ -36,6 +33,12 @@ multiple commands can be entered on a single line by seperating them with a spac
 
 any command line arguments will be parsed as if they were entered interactively
 `
+
+var (
+	progRunning = true
+	valStack    = stack.New()
+	storedVals  = make(map[interface{}]interface{})
+)
 
 func main() {
 
@@ -129,7 +132,7 @@ func processInput(uinput string) {
 
 			valStack.Push(val2 / val1)
 			fmt.Println("quotient is", valStack.Peek())
-		case  "|": 
+		case  "|": // mirror/swap function
 			val1 := valStack.Pop()
 			val2 := valStack.Pop()
 
@@ -137,6 +140,13 @@ func processInput(uinput string) {
 			valStack.Push(val1)
 
 			fmt.Println("values",val2,"and",val1,"swapped")
+		case "$": // store function
+			val1 := valStack.Pop() //index
+			val2 := valStack.Pop() //value
+			
+
+			storedVals[val1] = val2
+			fmt.Println("value",val2,"stored under index",val1)
 		case "l":
 			showStack(valStack)
 		case "h":
