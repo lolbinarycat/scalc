@@ -1,0 +1,94 @@
+package main
+
+import (
+	"fmt"
+	"bufio"
+	"os"
+	"strings"
+	"strconv"
+	//"errors"
+	
+	"github.com/golang-collections/collections/stack"
+)
+
+
+var(
+	progRunning = true
+	valStack = stack.New()
+)
+
+var helpText string = `
+this is a simple stack-based calculator program
+
+the following commands are currently supported:
+
+    q    quits the program
+    =    view stack
+    +    add last 2 numbers in the stack
+    h    print this helptext
+
+enter any number to push it to the stack
+
+`
+
+func main() {
+	reader := bufio.NewReader(os.Stdin)
+
+
+	for progRunning {
+		fmt.Print("-> ")
+
+		uinput, err := reader.ReadString('\n')
+		if err != nil {panic(err)}
+
+		uinput = strings.Replace(uinput,"\n","",-1)
+
+		numInput, inpIsNum := strconv.ParseFloat(uinput,64)
+
+		if 	inpIsNum == nil {
+			valStack.Push(numInput)
+			fmt.Println(numInput,"pushed")
+		} else {
+
+			switch uinput {
+			case "q" :
+				progRunning = false
+			case "+" :
+				val1 := valStack.Pop().(float64)
+				val2 := valStack.Pop().(float64)
+				valStack.Push(val1 + val2)
+				fmt.Println("sum is",valStack.Peek())
+			case "=" :
+				showStack(valStack)
+			case "h" :
+				fmt.Print(helpText)
+			default:
+				fmt.Println("command unsupported")
+			}
+		}
+	}
+}
+
+func showStack(stk *stack.Stack) {
+	stackCopy := *stk
+	for stackCopy.Peek() != nil {
+		fmt.Println(stackCopy.Pop())
+	}
+}
+
+func getNumber(reader *bufio.Reader) (float64, error) {
+	uinput, err := reader.ReadString('\n')
+	ec(err)
+
+	uinput = strings.Replace(uinput,"\n","",-1)
+	numinput, err := strconv.ParseFloat(uinput,64)
+	ec(err)
+	
+	return numinput, nil	
+}
+
+func ec(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
