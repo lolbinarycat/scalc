@@ -151,6 +151,10 @@ func processInput(uinput string) {
 			valStack.Push(storedVals[val1])
 
 			fmt.Println("value",valStack.Peek(),"retrived from index",val1)
+		case "~":
+			val1 := valStack.Pop()
+
+			fmt.Println("value",val1,"removed from stack")
 		case "l":
 			showStack(valStack)
 		case "h":
