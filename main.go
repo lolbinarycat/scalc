@@ -136,8 +136,9 @@ func processInput(uinput string) {
 			val1 := valStack.Pop()
 			val2 := valStack.Pop()
 
-			valStack.Push(val2)
 			valStack.Push(val1)
+			valStack.Push(val2)
+			
 
 			fmt.Println("values",val2,"and",val1,"swapped")
 		case "$": // store function
@@ -150,7 +151,7 @@ func processInput(uinput string) {
 			val1 := valStack.Peek()
 			valStack.Push(storedVals[val1])
 
-			fmt.Println("value",valStack.Peek(),"retrived from index",val1)
+			//fmt.Println("value",valStack.Peek(),"retrived from index",val1)
 		case "~":
 			val1 := valStack.Pop()
 
