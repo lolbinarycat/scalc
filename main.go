@@ -106,9 +106,7 @@ func processInput(uinput string) {
 	} else if uinput[:1] == "\"" /*&& uinput[len(uinput):] == "\""*/  {
 		valStack.Push(uinput)
 		fmt.Println(uinput,"pushed")
-	
 	} else {
-
 		switch uinput {
 		case "q":
 			progRunning = false
@@ -161,9 +159,13 @@ func processInput(uinput string) {
 			fmt.Println("value",val2,"stored under index",val1)
 		case "=":
 			val1 := valStack.Peek()
-			valStack.Push(storedVals[val1])
+			if storedVals[val1] != nil {
+				valStack.Push(storedVals[val1])
 
-			fmt.Println("value",valStack.Peek(),"retrived from index",val1)
+				fmt.Println("value",valStack.Peek(),"retrived from index",val1)
+			} else {
+				fmt.Println("index",val1,"does not have a value assigned")
+			}
 		case "~": //removes items from stack
 			val1 := valStack.Pop()
 
