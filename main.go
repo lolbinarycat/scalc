@@ -3,21 +3,21 @@ package main
 import (
 	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
-	"flag"
 
 	"github.com/golang-collections/collections/stack"
+
+	//"io"
 )
-
-
 
 var helpText string = `
 this is a simple stack-based calculator program
 
-the following commands are currently supported:
+the following are some currently supported commands:
 
     q    quits the program
     l    view stack
@@ -42,10 +42,12 @@ var (
 )
 
 func main() {
-	
-	boolFlags := setFlags()
 
-	if len(os.Args) > 1 {
+	defer showStack(valStack)
+
+	boolFlags, stringFlags := setFlags()
+
+	if len(flag.Args()) >= 1 {
 		for _, uinput := range flag.Args() {
 			processInput(uinput)
 		}
@@ -53,15 +55,30 @@ func main() {
 			progRunning = false
 		}
 	}
-	
-	reader := bufio.NewReader(os.Stdin)
+
+	var reader *bufio.Reader
+	var readingFile bool
+
+	if *stringFlags["file-path"] != "" {
+		inputFile, err := os.Open(*stringFlags["file-path"])
+		ec(err)
+		reader = bufio.NewReader(inputFile)
+		readingFile = true
+	} else {
+		reader = bufio.NewReader(os.Stdin)
+		readingFile = false
+	}
 
 	for progRunning {
 		fmt.Print("-> ")
 
 		uinputFull, err := reader.ReadString('\n')
 		if err != nil {
-			panic(err)
+			if readingFile == true {
+				reader = bufio.NewReader(os.Stdin)
+			} else {
+				panic(err)
+			}
 		}
 
 		uinputFull = strings.Replace(uinputFull, "\n", "", -1)
@@ -70,31 +87,35 @@ func main() {
 		uinputList := strings.SplitN(uinputFull, " ", -1)
 
 		for _, uinput := range uinputList {
-			processInput(uinput)
+			halt := processInput(uinput)
+			if halt {
+				break
+			}
 		}
 	}
 }
 
-func setFlags() (map[string]*bool) {
+func setFlags() (map[string]*bool, map[string]*string) {
 	boolFlags := make(map[string]*bool)
-	boolFlags["no-arg-auto-exit"] = flag.Bool("no-arg-auto-exit",true,"makes the program not exit automaticaly when run with command-line arguments")
+	boolFlags["no-arg-auto-exit"] = flag.Bool("no-arg-auto-exit", true, "makes the program not exit automaticaly when run with command-line arguments")
+	stringFlags := make(map[string]*string)
+	stringFlags["file-path"] = flag.String("f", "", "parse instructions from file")
 
 	flag.Parse()
-	
-	return boolFlags
+
+	return boolFlags, stringFlags
 }
 
-
-
-func processInput(uinput string) {
-	defer recover()
+func processInput(uinput string) (halt bool) {
+	//defer meditate()
 
 	numInput, inpIsNum := strconv.ParseFloat(uinput, 64)
 
-
-	if bracketDepth > 0 {
+	if len(uinput) == 0 {
+		return false
+	} else if bracketDepth > 0 {
 		val1 := valStack.Pop() //brackets are used to store functions
-		valStack.Push(strings.Join([]string{val1.(string),uinput}," "))
+		valStack.Push(strings.Join([]string{val1.(string), uinput}, " "))
 		if uinput == "]" {
 			bracketDepth--
 		} else if uinput == "[" {
@@ -103,9 +124,9 @@ func processInput(uinput string) {
 	} else if inpIsNum == nil {
 		valStack.Push(numInput)
 		fmt.Println(numInput, "pushed")
-	} else if uinput[:1] == "\"" /*&& uinput[len(uinput):] == "\""*/  {
+	} else if uinput[:1] == "\"" && uinput[len(uinput)-1:] == "\"" {
 		valStack.Push(uinput)
-		fmt.Println(uinput,"pushed")
+		fmt.Println(uinput, "pushed")
 	} else {
 		switch uinput {
 		case "q":
@@ -142,55 +163,67 @@ func processInput(uinput string) {
 
 			valStack.Push(val2 / val1)
 			fmt.Println("quotient is", valStack.Peek())
-		case  "|": // mirror/swap function
+		case "|": // mirror/swap function
 			val1 := valStack.Pop()
 			val2 := valStack.Pop()
 
 			valStack.Push(val1)
 			valStack.Push(val2)
-			
 
-			fmt.Println("values",val2,"and",val1,"swapped")
+			fmt.Println("values", val2, "and", val1, "swapped")
 		case "$": // store function
 			val1 := valStack.Pop() //index
 			val2 := valStack.Pop() //value
-			
+
 			storedVals[val1] = val2
-			fmt.Println("value",val2,"stored under index",val1)
+			fmt.Println("value", val2, "stored under index", val1)
 		case "=":
 			val1 := valStack.Peek()
 			if storedVals[val1] != nil {
 				valStack.Push(storedVals[val1])
 
-				fmt.Println("value",valStack.Peek(),"retrived from index",val1)
+				fmt.Println("value", valStack.Peek(), "retrived from index", val1)
 			} else {
-				fmt.Println("index",val1,"does not have a value assigned")
+				fmt.Println("index", val1, "does not have a value assigned")
 			}
 		case "~": //removes items from stack
 			val1 := valStack.Pop()
 
-			fmt.Println("value",val1,"removed from stack")
+			fmt.Println("value", val1, "removed from stack")
+		case "_": //duplicates top item in stack
+			val1 := valStack.Peek()
+			valStack.Push(val1)
 		case "[": //lets you store functions
 			bracketDepth = 1
 			valStack.Push(uinput)
 		case "#": //lets you run stored functions
-			instructionsRaw := valStack.Pop().(string)
-			instructionsSlice := strings.Split(instructionsRaw," ")
-			instructionsStripped := instructionsSlice[1:len(instructionsSlice)-1]
+			instructionsRaw, _ := valStack.Pop().(string)
+			instructionsSlice := strings.Split(instructionsRaw, " ")
+			instructionsStripped := instructionsSlice[1 : len(instructionsSlice)-1]
 			
-			
+
 			for _, instruction := range instructionsStripped {
-				processInput(instruction)
+				halt := processInput(instruction)
+				if halt {
+					break
+				}
+			}
+		case "?":
+			val1, isNum := valStack.Peek().(float64) 
+			if val1 == 0 && isNum {
+				return true
 			}
 		case "l":
 			showStack(valStack)
 		case "h":
 			fmt.Print(helpText)
 		default:
-			fmt.Println("command",uinput,"not recognized")
+			fmt.Println("command", uinput, "not recognized")
 		}
 
 	}
+	fmt.Println("BD:",bracketDepth)
+	return false
 }
 
 func ifErrStackWarn(err error, neededVals int) bool { //check if there is an error, and if so, warn about the amout of values in stack
@@ -220,12 +253,11 @@ func showStack(stk *stack.Stack) {
 	}
 }
 
-func meditate() {  //stops it from panicing
-    if r := recover(); r!= nil {
-        fmt.Println("recovered from ", r)
-    }
+func meditate() { //stops it from panicing
+	if r := recover(); r != nil {
+		fmt.Println("recovered from ", r)
+	}
 }
-
 
 func getNumber(reader *bufio.Reader) (float64, error) {
 	uinput, err := reader.ReadString('\n')
