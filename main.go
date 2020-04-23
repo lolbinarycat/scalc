@@ -17,7 +17,7 @@ import (
 var helpText string = `
 this is a simple stack-based calculator program
 
-the following are some currently supported commands:
+the following are some currently supported instructions:
 
     q    quits the program
     l    view stack
@@ -25,13 +25,25 @@ the following are some currently supported commands:
     -    subtract the last number from the second-to-last number
     *    multiply the last 2 numbers in the stack
     /    divide the last number from the second-to-last number
+    |    swap the last 2 values in stack
+    $    store the second-to-last value under the index of the last value
+    =    retrives the value stored under the index of the last value in stack
+    ~    removes the last value
+    _    duplicates the last value
+    ?    if the last value is 0, skips to next line of instructions
+    [    store instructions in stack until matching ] is reached
+    #    if the last value was a set of instuctions stored with [, evaluate them
     h    print this helptext
 
 enter any number to push it to the stack
 
-multiple commands can be entered on a single line by seperating them with a space
+surround text with "" to push it to the stack (spaces not currently supported)
+
+multiple instructions can be entered on a single line by seperating them with a space
 
 any command line arguments will be parsed as if they were entered interactively
+
+use -f FILENAME to parse the contents of a file
 `
 
 var (
@@ -43,9 +55,11 @@ var (
 
 func main() {
 
-	defer showStack(valStack)
-
 	boolFlags, stringFlags := setFlags()
+
+	if *boolFlags["no-crash-on-panic"] {
+		defer meditate()
+	}
 
 	if len(flag.Args()) >= 1 {
 		for _, uinput := range flag.Args() {
@@ -98,6 +112,7 @@ func main() {
 func setFlags() (map[string]*bool, map[string]*string) {
 	boolFlags := make(map[string]*bool)
 	boolFlags["no-arg-auto-exit"] = flag.Bool("no-arg-auto-exit", true, "makes the program not exit automaticaly when run with command-line arguments")
+	boolFlags["no-crash-on-panic"] = flag.Bool("nc",false,"makes the program try to keep running, no matter what")
 	stringFlags := make(map[string]*string)
 	stringFlags["file-path"] = flag.String("f", "", "parse instructions from file")
 
