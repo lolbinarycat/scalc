@@ -111,7 +111,7 @@ func main() {
 
 func setFlags() (map[string]*bool, map[string]*string) {
 	boolFlags := make(map[string]*bool)
-	boolFlags["no-arg-auto-exit"] = flag.Bool("no-arg-auto-exit", true, "makes the program not exit automaticaly when run with command-line arguments")
+	boolFlags["no-arg-auto-exit"] = flag.Bool("no-arg-auto-exit", true, "makes the program not exit automaticaly when run with command-line arguments OBSOLETE")
 	boolFlags["no-crash-on-panic"] = flag.Bool("nc",false,"makes the program try to keep running, no matter what")
 	stringFlags := make(map[string]*string)
 	stringFlags["file-path"] = flag.String("f", "", "parse instructions from file")
@@ -192,8 +192,17 @@ func processInput(uinput string) (halt bool) {
 
 			storedVals[val1] = val2
 			fmt.Println("value", val2, "stored under index", val1)
-		case "=":
+		/*case "=":
 			val1 := valStack.Peek()
+			if storedVals[val1] != nil {
+				valStack.Push(storedVals[val1])
+
+				fmt.Println("value", valStack.Peek(), "retrived from index", val1)
+			} else {
+				fmt.Println("index", val1, "does not have a value assigned")
+			}*/
+		case "=":
+			val1 := valStack.Pop()
 			if storedVals[val1] != nil {
 				valStack.Push(storedVals[val1])
 
@@ -228,6 +237,8 @@ func processInput(uinput string) (halt bool) {
 			if val1 == 0 && isNum {
 				return true
 			}
+		case ";": //asm style comments
+			return true
 		case "l":
 			showStack(valStack)
 		case "h":
@@ -237,7 +248,7 @@ func processInput(uinput string) (halt bool) {
 		}
 
 	}
-	fmt.Println("BD:",bracketDepth)
+	//fmt.Println("BD:",bracketDepth)
 	return false
 }
 
