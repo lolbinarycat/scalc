@@ -33,6 +33,7 @@ the following are some currently supported instructions:
     ?    if the last value is 0, skips to next line of instructions
     [    store instructions in stack until matching ] is reached
     #    if the last value was a set of instuctions stored with [, evaluate them
+    ;    ignore the rest of the line (used for comments)
     h    print this helptext
 
 enter any number to push it to the stack
