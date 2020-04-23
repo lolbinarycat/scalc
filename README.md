@@ -24,3 +24,5 @@ enter any number to push it to the stack
 multiple commands can be entered on a single line by seperating them with a space
 
 any command line arguments will be parsed as if they were entered interactively.
+
+use -f FILENAME to parse the contents of a file
